@@ -1,0 +1,8 @@
+lala_la1(lamda,beta,gama){
+	lamda + beta + gama
+}
+foo(){
+	"lamda kalisperma 	prar d2   ds adasd  adasddfsf"
+}
+
+name()

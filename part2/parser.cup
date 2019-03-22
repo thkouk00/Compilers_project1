@@ -1,0 +1,113 @@
+/* Simple +/-/* expression language; parser evaluates constant expressions on the fly*/
+/**
+ *  Package and Import Specifications
+ */
+import java_cup.runtime.*;
+
+/**
+ *  Usercode Components
+ */
+parser code {:
+    // Connect this parser to a scanner!
+    Scanner s;
+    Parser(Scanner s){ this.s=s; }
+:}
+
+/* define how to connect to the scanner! */
+scan with {: return s.next_token(); :};
+
+/**
+ *  Symbol Lists
+ */
+
+/* Terminals (tokens returned by the scanner). */
+terminal            SEMI, PLUS, MINUS, TIMES, LPAREN, RPAREN, LBRAC, RBRAC, COMMA, QUOT;
+terminal String     STRING_LITERAL;        // our scanner provides numbers as strings
+
+/*  Non terminals */
+/*
+non terminal            expr_list;
+non terminal String    expr;      // used to store evaluated subexpressions
+*/
+
+/*  Non terminals */
+non terminal            Start, Function, Function1, FDecl, FCall, CompoundStmt;
+non terminal String    Declaration, Concatenation, StringContent;      // used to store evaluated subexpressions
+
+
+
+
+/**
+ *  Precedence Declarations
+ */
+
+precedence left PLUS, MINUS;
+precedence left TIMES;
+
+/**
+ *  The Grammar Rules
+ */
+
+
+Start ::= Function:f Start:s				
+		| Declaration:d 					
+		| Function:f 						
+		;
+
+Function	::=	STRING_LITERAL:s LPAREN Function1
+			;
+Function1	::=	FDecl:s
+			|	FCall:s
+			;
+
+FDecl		::=	RPAREN CompoundStmt
+			|	Declaration RPAREN CompoundStmt
+			;
+
+FCall		::=	Declaration RPAREN
+			|	RPAREN
+			;
+
+CompoundStmt ::= LBRAC Concatenation:s RBRAC 					{: System.out.println("HERE "+ s);:}   
+    ;
+
+Declaration ::= Declaration COMMA STRING_LITERAL:s 
+			|	STRING_LITERAL:s 	
+	;
+
+Concatenation	::=	Concatenation:s1 PLUS STRING_LITERAL:s2		{: RESULT = s1 + " + " + s2; :}
+				|	QUOT Concatenation:s QUOT 					{: System.out.println("ALA"); RESULT = "\"" + s + "\""; :}
+				|	StringContent:s 							{: RESULT = s; :}
+				
+				; 
+
+StringContent 	::=	StringContent:s1 STRING_LITERAL:s2 			{: RESULT = s1 + " " + s2; :}
+				|	STRING_LITERAL:s 							{: RESULT = s; :}
+				;
+
+
+
+
+/*
+expr_list ::=	expr_list expr:e SEMI       {: System.out.print("Rule 1 "); System.out.println(e);         :} 
+			|	expr:e SEMI					{: System.out.print("Rule 2 "); System.out.println(e);         :}
+			|	expr:e 						{: System.out.print("Rule 3 "); System.out.println(e);         :}
+			|	expr:e LPAREN RPAREN		{: System.out.print("Rule 4 "); System.out.println(e);         :}
+			;
+expr 	::= STRING_LITERAL:s	            {: System.out.print("**** ");RESULT = s;  :}
+		| 	expr:y LPAREN expr:e RPAREN	        {: RESULT = y+e;  :}
+		;
+*/
+
+
+/*
+expr_list ::= expr_list expr:e SEMI         {: System.out.println("Rule 1"); System.out.println(e);         :}
+            | expr:e SEMI                   {: System.out.println("Rule 2"); System.out.println(e);         :}
+;
+expr      ::= expr:e1 PLUS  expr:e2         {: RESULT = e1+e2;                :}
+             | expr:e1 MINUS expr:e2        {: RESULT = e1-e2;                :}
+             | expr:e1 TIMES expr:e2        {: RESULT = e1*e2;                :}
+             | LPAREN expr:e RPAREN	        {: RESULT = e;                    :}
+             | STRING_LITERAL:s	            {: RESULT = Integer.parseInt(s);  :}
+             ;
+*/
