@@ -22,7 +22,7 @@ scan with {: return s.next_token(); :};
 
 /* Terminals (tokens returned by the scanner). */
 terminal            SEMI, PLUS, MINUS, TIMES, LPAREN, RPAREN, LBRAC, RBRAC, COMMA, QUOT;
-terminal String     STRING_LITERAL;        // our scanner provides numbers as strings
+terminal String     STRING_LITERAL, STR;        // our scanner provides numbers as strings
 
 /*  Non terminals */
 /*
@@ -31,8 +31,8 @@ non terminal String    expr;      // used to store evaluated subexpressions
 */
 
 /*  Non terminals */
-non terminal            Start, Function, Function1, FDecl, FCall, CompoundStmt;
-non terminal String    Declaration, Concatenation, StringContent;      // used to store evaluated subexpressions
+non terminal            Goal, Start, Function, FunctionD, FunctionC,FDecl, FCall, CompoundStmt, CompoundStmtD;
+non terminal String    Declaration, DeclarationD, DeclarationC, Concatenation, ConcatenationD, StringContent, Temp;      // used to store evaluated subexpressions
 
 
 
@@ -48,43 +48,78 @@ precedence left TIMES;
  *  The Grammar Rules
  */
 
+/* kanonas gia func Decl kai meta kanonas gia func calls , opote otan einai gia func calls sthn arxh ftiaxnw thn main */
 
-Start ::= Function:f Start:s				
-		| Declaration:d 					
-		| Function:f 						
+/* take all inputs such as : first function declarations and after function calls or vice versa */
+
+/* xreaizetai kai ena Goal ::= Start; gia na ftiaxoyme thn Main class */
+
+Goal	::=	Start:s 					{:System.out.println("public class Main {\n\t" + s + "\n}");:}
 		;
 
-Function	::=	STRING_LITERAL:s LPAREN Function1
+Start ::=	FunctionD:s1 FunctionC:s2			{:System.out.println("PER 1");  RESULT = "\n\tpublic static void main(String[] args){\n\t" + s2 + "\t}\n\n\t" + s1; :}
+		|	FunctionC FunctionD					{:System.out.println("PER 2");:}
+		|	FunctionD							{:System.out.println("PER 3");:}
+		|	FunctionC							{:System.out.println("PER 4");:}
+		;		
+
+
+
+FunctionD	::=	FunctionD:s1 STRING_LITERAL:s2 LPAREN RPAREN CompoundStmt:s3 									{: RESULT = s1 + "public static String " + s2 + "()" + s3 + "\n\t"; :}
+			|	FunctionD:s1 STRING_LITERAL:s2 LPAREN DeclarationD:s3 RPAREN CompoundStmtD:s4					{: RESULT = s1 + "public static String " + s2 + "(" + s3 + ")" + s4 ;:}
+			|	STRING_LITERAL:s1 LPAREN RPAREN CompoundStmt:s2 												{: RESULT = "public static String " + s1 + "()" + s2 + "\n\t" ;  :}
+			|	STRING_LITERAL:s1 LPAREN DeclarationD:s2 RPAREN CompoundStmtD:s3 								{: RESULT = "public static String " + s1 + "(" + s2 + ")" + s3 + "\n\t"; :}
+			; 
+
+FunctionC	::=	FunctionC:s1 STRING_LITERAL:s2 LPAREN RPAREN									{: RESULT = s1 + "\t\tSystem.out.println(" + s2 +"());\n"; :}
+			|	FunctionC:s1 STRING_LITERAL:s2 LPAREN DeclarationD:s3 RPAREN 					{: RESULT = s1 + "\t\tSystem.out.println(" + s2 +"(" + s3 + "));\n";:}
+			|	STRING_LITERAL:s LPAREN RPAREN 													{: RESULT = "\tSystem.out.println(" + s + "());\n"; :}
+			|	STRING_LITERAL:s1 LPAREN DeclarationD:s2 RPAREN 								{: RESULT = "\tSystem.out.println(" + s1 + "(" + s2 + ");"  ; :}
 			;
-Function1	::=	FDecl:s
-			|	FCall:s
+
+FDecl		::=	RPAREN CompoundStmt 					/* prevent function with no args to return variable */
+			|	DeclarationD RPAREN CompoundStmtD 		/* function with args can return arg */
 			;
 
-FDecl		::=	RPAREN CompoundStmt
-			|	Declaration RPAREN CompoundStmt
+FCall		::=	RPAREN 
+			|	DeclarationC RPAREN
+			
 			;
 
-FCall		::=	Declaration RPAREN
-			|	RPAREN
-			;
+CompoundStmt	::=	LBRAC Concatenation:s RBRAC 					{: System.out.println("HERE "+ s); RESULT = "{\n\t\treturn " + s + ";\n\t}"; :}   
+    			;
 
-CompoundStmt ::= LBRAC Concatenation:s RBRAC 					{: System.out.println("HERE "+ s);:}   
-    ;
+CompoundStmtD	::=	LBRAC ConcatenationD:s RBRAC 					{: System.out.println("HERE "+ s); RESULT = "{\n\t\treturn " + s + ";\n\t}"; :}   
+    			;
 
-Declaration ::= Declaration COMMA STRING_LITERAL:s 
-			|	STRING_LITERAL:s 	
-	;
+Declaration 	::=	 
+					Concatenation COMMA Declaration
+				|	STRING_LITERAL COMMA Declaration
+				|	Concatenation
+				;
 
-Concatenation	::=	Concatenation:s1 PLUS STRING_LITERAL:s2		{: RESULT = s1 + " + " + s2; :}
-				|	QUOT Concatenation:s QUOT 					{: System.out.println("ALA"); RESULT = "\"" + s + "\""; :}
-				|	StringContent:s 							{: RESULT = s; :}
-				
+DeclarationD 	::= DeclarationD:s1 COMMA STRING_LITERAL:s2 				{: RESULT = s1 + ", String " + s2; :}
+				|	DeclarationD:d COMMA Concatenation:s 
+				|	STRING_LITERAL:s 										{: RESULT = "String " + s; :}
+				|	Concatenation
+				;
+
+DeclarationC 	::= DeclarationC COMMA STRING_LITERAL:s 
+				|	DeclarationC:d COMMA Concatenation:s
+				|	STRING_LITERAL:s 
+				;
+
+Concatenation	::=	QUOT StringContent:s QUOT 					{: System.out.println("ALA"); RESULT = "\"" + s + "\""; :}
 				; 
+
+ConcatenationD	::=	ConcatenationD:s1 PLUS STRING_LITERAL:s2	{: RESULT = s1 + " + " + s2; :}
+				|	QUOT StringContent:s QUOT 					{: System.out.println("ALA"); RESULT = "\"" + s + "\""; :}
+				|	STRING_LITERAL:s 							{: RESULT = s; :}
+				;
 
 StringContent 	::=	StringContent:s1 STRING_LITERAL:s2 			{: RESULT = s1 + " " + s2; :}
 				|	STRING_LITERAL:s 							{: RESULT = s; :}
 				;
-
 
 
 

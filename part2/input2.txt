@@ -1,8 +1,18 @@
-lala_la1(lamda,beta,gama){
-	lamda + beta + gama
+lala(abla){
+	abla
 }
 foo(){
-	"lamda kalisperma 	prar d2   ds adasd  adasddfsf"
+	"lamda kalispera 	prar d2   ds adasd  adasddfsf"
+}
+name(){
+	"John"
+}
+
+asa(aka,lala,erw){
+	aka + lala + erw
 }
 
 name()
+foo()
+lala("kalispera")
+asa("giolo ","kale ","kiria")
