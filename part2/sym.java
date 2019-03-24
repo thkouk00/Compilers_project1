@@ -7,8 +7,8 @@
 public interface sym {
   /* terminals */
   public static final int MINUS = 4;
+  public static final int QSTR = 13;
   public static final int QUOT = 11;
-  public static final int STR = 13;
   public static final int SEMI = 2;
   public static final int STRING_LITERAL = 12;
   public static final int LBRAC = 8;
@@ -34,7 +34,7 @@ public interface sym {
   "COMMA",
   "QUOT",
   "STRING_LITERAL",
-  "STR"
+  "QSTR"
   };
 }
 

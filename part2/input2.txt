@@ -1,18 +1,16 @@
-lala(abla){
-	abla
-}
-foo(){
-	"lamda kalispera 	prar d2   ds adasd  adasddfsf"
-}
-name(){
-	"John"
-}
-
-asa(aka,lala,erw){
-	aka + lala + erw
-}
-
-name()
 foo()
-lala("kalispera")
-asa("giolo ","kale ","kiria")
+{
+	"foo"
+}
+
+bla(geia,ti,kaneis)
+{
+	geia + ti + kaneis
+}
+lala(kalispera){
+	"geia " + kalispera
+}
+
+lala("asd")
+bla("geia","d","leei")
+foo()

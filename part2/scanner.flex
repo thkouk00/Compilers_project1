@@ -56,10 +56,9 @@ LineTerminator = \r|\n|\r\n
 
 /* White space is a line terminator, space, tab, or line feed. */
 WhiteSpace     = {LineTerminator} | [ \t\f]
-word = [a-zA-Z][a-zA-Z0-9_]* 
+word =  [a-zA-Z][a-zA-Z0-9_]* 
 dec_int_lit = 0 | [1-9][0-9]*
-str = \" (\\.|[^\"\\])* \"
-Space = [\s]
+/*str = \" (\\.|[^\"\\])* \" */
 
 
 %state STRING
@@ -81,27 +80,25 @@ Space = [\s]
   ")"            { return symbol(sym.RPAREN); }
   ";"            { return symbol(sym.SEMI); }
   {word}   { stringBuffer.setLength(0); stringBuffer.append( yytext() ); return symbol(sym.STRING_LITERAL, stringBuffer.toString()); }
-  /* {str}    { stringBuffer.setLength(0); stringBuffer.append( yytext() ); return symbol(sym.STRING_LITERAL, stringBuffer.toString());} */
   {dec_int_lit} {stringBuffer.setLength(0); stringBuffer.append( yytext() ); return symbol(sym.STRING_LITERAL, stringBuffer.toString()); }
-  \"      { return symbol(sym.QUOT);} 
-  {WhiteSpace}   {  stringBuffer.append(" ");}
-  \n             { stringBuffer.append('\n'); }
+  /* \"      { return symbol(sym.QUOT);} */ 
+  /* \n             { stringBuffer.append('\n'); } */
 
-  /* \"             { stringBuffer.setLength(0); yybegin(STRING); return symbol(sym.QUOT);}  */
+   \"             { stringBuffer.setLength(0); yybegin(STRING); }  
+   {WhiteSpace}   { /* just skip what was found, do nothing */ }
 }
 
 
 
 <STRING> {
-      \"                             {  yybegin(YYINITIAL);
-                                        return symbol(sym.STRING_LITERAL, stringBuffer.toString()); }
+      \"                             {  yybegin(YYINITIAL); System.out.println("LEXER "+stringBuffer);
+                                        return symbol(sym.QSTR, stringBuffer.toString()); }
       [^\n\r\"\\]+                   { stringBuffer.append( yytext() ); }
       \\t                            { stringBuffer.append('\t'); }
       \\n                            { stringBuffer.append('\n'); }
       \\r                            { stringBuffer.append('\r'); }
       \\\"                           { stringBuffer.append('\"'); }
       \\                             { stringBuffer.append('\\'); }
-      {Space}                        { stringBuffer.append(' ');  }
 }
 
 /* No token was found for the input so through an error.  Print out an
