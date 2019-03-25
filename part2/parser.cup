@@ -38,8 +38,8 @@ non terminal String    expr;      // used to store evaluated subexpressions
 */
 
 /*  Non terminals */
-non terminal            Goal, Start, Function, FunctionD, FunctionC,FDecl, FCall, CompoundStmt, CompoundStmtD;
-non terminal String    Declaration, DeclarationD, DeclarationC, Concatenation, ConcatenationD, StringContent, Temp;      // used to store evaluated subexpressions
+non terminal            Goal, Start, Function, FunctionD,FDecl, FCall, CompoundStmt, CompoundStmtD;
+non terminal String    FunctionC, FunctionC2, Declaration, DeclarationD, DeclarationC, Concatenation, ConcatenationD, StringContent, Temp;      // used to store evaluated subexpressions
 
 
 
@@ -89,14 +89,13 @@ FunctionC	::=	FunctionC:s1 STRING_LITERAL:s2 LPAREN RPAREN									{:  RESULT = 
 			|	STRING_LITERAL:s1 LPAREN DeclarationD:s2 RPAREN 								{:  System.out.println("flag is "+FnCflag +""+s);RESULT = "\tSystem.out.println(" + s1 + "(" 																							+ s2 + "));"  ; :}
 			;
 
-FDecl		::=	RPAREN CompoundStmt 					/* prevent function with no args to return variable */
-			|	DeclarationD RPAREN CompoundStmtD 		/* function with args can return arg */
+/* helper rule, used for nested functions as arguments */
+FunctionC2	::=	FunctionC2:s1 STRING_LITERAL:s2 LPAREN RPAREN									{:  RESULT = s1 + "(" + s2 + ")"; :}
+			|	FunctionC2:s1 STRING_LITERAL:s2 LPAREN Declaration:s3 RPAREN 					{:  RESULT = s1 +  s2 + "(" + s3 + ")";:}
+			|	STRING_LITERAL:s LPAREN RPAREN 													{:  RESULT = s + "()"; :}
+			|	STRING_LITERAL:s1 LPAREN Declaration:s2 RPAREN 								{:  System.out.println("flag is "+FnCflag +""+s);RESULT = s1 + "(" + s2 + ")"  ; :}
 			;
 
-FCall		::=	RPAREN 
-			|	DeclarationC RPAREN
-			
-			;
 
 CompoundStmt	::=	LBRAC QSTR:s RBRAC 					{: CompoundFlag = 1; System.out.println("HERE "+ s); RESULT = "{\n\t\treturn \"" + s + "\";\n\t}"; :}   
     			;
@@ -104,11 +103,17 @@ CompoundStmt	::=	LBRAC QSTR:s RBRAC 					{: CompoundFlag = 1; System.out.println
 CompoundStmtD	::=	LBRAC ConcatenationD:s RBRAC 					{: CompoundFlag = 1; System.out.println("HERE# "+ s); RESULT = "{\n\t\treturn " + s + ";\n\t}"; :}   
     			;
 
-Declaration 	::=	 
-					Concatenation COMMA Declaration
-				|	STRING_LITERAL COMMA Declaration
-				|	Concatenation
-				;
+/* helper rule, used for nested functions as arguments */
+Declaration 	::=	Declaration:s1 COMMA STRING_LITERAL:s2 				{: 
+																				 RESULT = s1 + ", String " + s2; :}
+				|	Declaration:s1 COMMA Concatenation:s2 					{: RESULT = s1 + "," + s2;:}
+				|	STRING_LITERAL:s 										{: 
+																					RESULT = "String " + s;  :}
+				|	Concatenation:s 										{: FnCflag = 1; 
+																					{System.out.println("EDW "+s);RESULT = s;System.out.println(s);} :}
+				|	Declaration:s1 COMMA FunctionC2:s2 					{: RESULT = s1 + "," + s2; :}
+				|	FunctionC2:s				/*function call as argument */  {: RESULT = s; :}
+				;						
 
 DeclarationD 	::= DeclarationD:s1 COMMA STRING_LITERAL:s2 				{: 
 																				 RESULT = s1 + ", String " + s2; :}
@@ -117,6 +122,8 @@ DeclarationD 	::= DeclarationD:s1 COMMA STRING_LITERAL:s2 				{:
 																					RESULT = "String " + s;  :}
 				|	Concatenation:s 										{: FnCflag = 1; 
 																					{System.out.println("EDW "+s);RESULT = s;System.out.println(s);} :}
+				|	DeclarationD:s1 COMMA FunctionC2:s2 					{: FnCflag = 1; RESULT = s1 + "," + s2; :}
+				|	FunctionC2:s				/*function call as argument */  {: FnCflag = 1; RESULT = s; :}
 				;						
 
 
@@ -126,8 +133,6 @@ DeclarationC 	::= DeclarationC:s1 COMMA STRING_LITERAL:s2  				{: RESULT =  s1 +
 				;
 
 Concatenation	::=	QSTR:s 										{: System.out.println("ALA"+s+" flag "+FnCflag); RESULT = "\"" + s + "\""; System.out.println(RESULT);:}
-				/*QUOT StringContent:s QUOT 					{: System.out.println("ALA"+s+" flag "+FnCflag); RESULT = "\"" + s + "\""; System.out.println(RESULT);:}
-				| 	QUOT QUOT 			{:RESULT = "\" \"";:} */
 				; 
 
 ConcatenationD	::=	ConcatenationD:s1 PLUS STRING_LITERAL:s2	{: RESULT = s1 + " + " + s2; :}

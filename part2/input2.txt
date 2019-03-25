@@ -11,6 +11,6 @@ lala(kalispera){
 	"geia " + kalispera
 }
 
-lala("asd")
-bla("geia","d","leei")
+lala(lala(foo()))
+bla("geia","d",foo())
 foo()
