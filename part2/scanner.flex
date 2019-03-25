@@ -58,8 +58,6 @@ LineTerminator = \r|\n|\r\n
 WhiteSpace     = {LineTerminator} | [ \t\f]
 word =  [a-zA-Z][a-zA-Z0-9_]* 
 dec_int_lit = 0 | [1-9][0-9]*
-/*str = \" (\\.|[^\"\\])* \" */
-
 
 %state STRING
 
@@ -69,6 +67,10 @@ dec_int_lit = 0 | [1-9][0-9]*
 <YYINITIAL> {
 /* operators */
 
+  "if"           { return new Symbol(sym.IF); }
+  "else"         { return symbol(sym.ELSE); }
+  "prefix"       { return symbol(sym.PREFIX); }
+  "suffix"       { return symbol(sym.SUFFIX); }
   "+"            { return symbol(sym.PLUS); }
   "-"            { return symbol(sym.MINUS); }
   "*"            { return symbol(sym.TIMES); }
@@ -81,11 +83,9 @@ dec_int_lit = 0 | [1-9][0-9]*
   ";"            { return symbol(sym.SEMI); }
   {word}   { stringBuffer.setLength(0); stringBuffer.append( yytext() ); return symbol(sym.STRING_LITERAL, stringBuffer.toString()); }
   {dec_int_lit} {stringBuffer.setLength(0); stringBuffer.append( yytext() ); return symbol(sym.STRING_LITERAL, stringBuffer.toString()); }
-  /* \"      { return symbol(sym.QUOT);} */ 
-  /* \n             { stringBuffer.append('\n'); } */
+  \"             { stringBuffer.setLength(0); yybegin(STRING); }  
 
-   \"             { stringBuffer.setLength(0); yybegin(STRING); }  
-   {WhiteSpace}   { /* just skip what was found, do nothing */ }
+  {WhiteSpace}   { /* just skip what was found, do nothing */ }
 }
 
 

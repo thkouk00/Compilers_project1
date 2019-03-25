@@ -28,17 +28,12 @@ scan with {: return s.next_token(); :};
  */
 
 /* Terminals (tokens returned by the scanner). */
-terminal            SEMI, PLUS, MINUS, TIMES, LPAREN, RPAREN, LBRAC, RBRAC, COMMA, QUOT;
+terminal            SEMI, PLUS, MINUS, TIMES, LPAREN, RPAREN, LBRAC, RBRAC, COMMA, QUOT, IF, ELSE, PREFIX, SUFFIX;
 terminal String     STRING_LITERAL, QSTR;        // our scanner provides numbers as strings
 
-/*  Non terminals */
-/*
-non terminal            expr_list;
-non terminal String    expr;      // used to store evaluated subexpressions
-*/
 
 /*  Non terminals */
-non terminal            Goal, Start, Function, FunctionD,FDecl, FCall, CompoundStmt, CompoundStmtD;
+non terminal            Goal, Start, Function, FunctionD,FDecl, FCall, CompoundStmt, CompoundStmtD, IFEXPR, IFEXPR2, EXPR;
 non terminal String    FunctionC, FunctionC2, Declaration, DeclarationD, DeclarationC, Concatenation, ConcatenationD, StringContent, Temp;      // used to store evaluated subexpressions
 
 
@@ -48,8 +43,10 @@ non terminal String    FunctionC, FunctionC2, Declaration, DeclarationD, Declara
  *  Precedence Declarations
  */
 
+precedence left PREFIX, SUFFIX;
 precedence left PLUS, MINUS;
 precedence left TIMES;
+precedence left IF, ELSE;
 
 /**
  *  The Grammar Rules
@@ -61,8 +58,7 @@ precedence left TIMES;
 
 /* xreaizetai kai ena Goal ::= Start; gia na ftiaxoyme thn Main class */
 
-Goal	::=
-		Start:s 					{:System.out.println("public class Main {\n\t" + s + "\n}");:}
+Goal	::=	Start:s 					{:System.out.println("public class Main {\n\t" + s + "\n}");:}
 		;
 
 Start ::=	FunctionD:s1 FunctionC:s2			{:System.out.println("PER 1");  RESULT = "\n\tpublic static void main(String[] args){\n\t" + s2 + "\t}\n\n\t" + s1; :}
@@ -89,7 +85,7 @@ FunctionC	::=	FunctionC:s1 STRING_LITERAL:s2 LPAREN RPAREN									{:  RESULT = 
 			|	STRING_LITERAL:s1 LPAREN DeclarationD:s2 RPAREN 								{:  System.out.println("flag is "+FnCflag +""+s);RESULT = "\tSystem.out.println(" + s1 + "(" 																							+ s2 + "));"  ; :}
 			;
 
-/* helper rule, used for nested functions as arguments */
+/* helper rule, used for nested function calls as arguments */
 FunctionC2	::=	FunctionC2:s1 STRING_LITERAL:s2 LPAREN RPAREN									{:  RESULT = s1 + "(" + s2 + ")"; :}
 			|	FunctionC2:s1 STRING_LITERAL:s2 LPAREN Declaration:s3 RPAREN 					{:  RESULT = s1 +  s2 + "(" + s3 + ")";:}
 			|	STRING_LITERAL:s LPAREN RPAREN 													{:  RESULT = s + "()"; :}
@@ -97,11 +93,29 @@ FunctionC2	::=	FunctionC2:s1 STRING_LITERAL:s2 LPAREN RPAREN									{:  RESULT 
 			;
 
 
-CompoundStmt	::=	LBRAC QSTR:s RBRAC 					{: CompoundFlag = 1; System.out.println("HERE "+ s); RESULT = "{\n\t\treturn \"" + s + "\";\n\t}"; :}   
+CompoundStmt	::=	LBRAC QSTR:s RBRAC 					{: CompoundFlag = 1; System.out.println("HERE "+ s); RESULT = "{\n\t\treturn \"" + s + "\";\n\t}"; :}  
+				|	LBRAC IFEXPR2 RBRAC  
     			;
 
 CompoundStmtD	::=	LBRAC ConcatenationD:s RBRAC 					{: CompoundFlag = 1; System.out.println("HERE# "+ s); RESULT = "{\n\t\treturn " + s + ";\n\t}"; :}   
+				|	LBRAC IFEXPR2 RBRAC  
     			;
+
+IFEXPR			::=	
+				    LPAREN QSTR:s1 PREFIX EXPR:s2 RPAREN EXPR ELSE EXPR
+				|	LPAREN STRING_LITERAL:s1 PREFIX EXPR:s2 RPAREN  EXPR ELSE EXPR
+				|   LPAREN QSTR:s1 SUFFIX EXPR:s2 RPAREN EXPR ELSE EXPR
+				|	LPAREN STRING_LITERAL:s1 SUFFIX EXPR:s2 RPAREN  EXPR ELSE EXPR
+				|	LPAREN IFEXPR2 PREFIX EXPR:s2 RPAREN EXPR ELSE EXPR
+				|	LPAREN IFEXPR2 SUFFIX EXPR:s2 RPAREN EXPR ELSE EXPR
+				;
+
+IFEXPR2 		::= IF IFEXPR
+				;
+
+EXPR 			::=	ConcatenationD
+				|	IFEXPR2
+				; 
 
 /* helper rule, used for nested functions as arguments */
 Declaration 	::=	Declaration:s1 COMMA STRING_LITERAL:s2 				{: 
@@ -143,29 +157,3 @@ ConcatenationD	::=	ConcatenationD:s1 PLUS STRING_LITERAL:s2	{: RESULT = s1 + " +
 StringContent 	::=	StringContent:s1 STRING_LITERAL:s2 			{: RESULT = s1 + " " + s2; :}
 				|	STRING_LITERAL:s 							{: System.out.println("EINAI "+s + ".");RESULT = s; :}
 				;
-
-
-
-/*
-expr_list ::=	expr_list expr:e SEMI       {: System.out.print("Rule 1 "); System.out.println(e);         :} 
-			|	expr:e SEMI					{: System.out.print("Rule 2 "); System.out.println(e);         :}
-			|	expr:e 						{: System.out.print("Rule 3 "); System.out.println(e);         :}
-			|	expr:e LPAREN RPAREN		{: System.out.print("Rule 4 "); System.out.println(e);         :}
-			;
-expr 	::= STRING_LITERAL:s	            {: System.out.print("**** ");RESULT = s;  :}
-		| 	expr:y LPAREN expr:e RPAREN	        {: RESULT = y+e;  :}
-		;
-*/
-
-
-/*
-expr_list ::= expr_list expr:e SEMI         {: System.out.println("Rule 1"); System.out.println(e);         :}
-            | expr:e SEMI                   {: System.out.println("Rule 2"); System.out.println(e);         :}
-;
-expr      ::= expr:e1 PLUS  expr:e2         {: RESULT = e1+e2;                :}
-             | expr:e1 MINUS expr:e2        {: RESULT = e1-e2;                :}
-             | expr:e1 TIMES expr:e2        {: RESULT = e1*e2;                :}
-             | LPAREN expr:e RPAREN	        {: RESULT = e;                    :}
-             | STRING_LITERAL:s	            {: RESULT = Integer.parseInt(s);  :}
-             ;
-*/

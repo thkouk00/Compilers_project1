@@ -1,16 +1,15 @@
-foo()
+foo(name,ada)
 {
-	"foo"
+	if (kappa prefix if (asw suffix ffre) lki else fre)
+		if (lamda suffix k)
+			xx
+		else
+			y
+	else
+		if (lamda suffix k)
+			xx
+		else
+			y
 }
 
-bla(geia,ti,kaneis)
-{
-	geia + ti + kaneis
-}
-lala(kalispera){
-	"geia " + kalispera
-}
-
-lala(lala(foo()))
-bla("geia","d",foo())
 foo()
