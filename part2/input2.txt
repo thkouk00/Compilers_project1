@@ -12,4 +12,10 @@ foo(name,ada)
 			y
 }
 
-foo()
+foo("adas",if (lamda suffix k)
+			xx
+		else
+			y,if (lamda suffix k)
+			xx
+		else
+			y,asdas)
