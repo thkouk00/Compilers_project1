@@ -1,21 +1,19 @@
-foo(name,ada)
-{
-	if (kappa prefix if (asw suffix ffre) lki else fre)
-		if (lamda suffix k)
-			xx
-		else
-			y
-	else
-		if (lamda suffix k)
-			xx
-		else
-			y
-}
+findLangType(langName) {
+        if ("Java" prefix langName)
+            if(langName prefix "Java")
+                "Static"
+            else
+                if("script" suffix langName)
+                    "Dynamic"
+                else
+                    "Unknown"
+        else
+            if ("script" suffix langName)
+                "Probably Dynamic"
+            else
+                "Unknown"
+    }
 
-foo("adas",if (lamda suffix k)
-			xx
-		else
-			y,if (lamda suffix k)
-			xx
-		else
-			y,asdas)
+    findLangType("Java")
+    findLangType("Javascript")
+    findLangType("Typescripdt")
