@@ -37,7 +37,7 @@ terminal String     STRING_LITERAL, QSTR;        // our scanner provides numbers
 non terminal            Goal, Start, Function, FunctionC, FunctionD , CompoundStmtD, EXPR, FunctionDecl, FunctionCall ;
 non terminal String    ArgListOpt, CallListOpt, CompoundStmt,FunctionC2, Declaration, DeclarationD, DeclarationC, Concatenation, ConcatenationD, StringContent, IFEXPR, IFEXPR2;   */   // used to store evaluated subexpressions
 
-non terminal            Goal, Start, FunctionD, FunctionC, FunctionDecl, CompoundStmt1, CompoundStmt2, ArgList, StmtList1, StmtList2, EXPR ;
+non terminal            Goal, FunctionD, FunctionC, FunctionDecl, CompoundStmt1, CompoundStmt2, ArgList, StmtList1, StmtList2, EXPR ;
 non terminal String    	ID, Arg, Stmt, FunctionCall, IFEXPR; 
 
 
@@ -54,16 +54,8 @@ precedence left IF, ELSE;
  *  The Grammar Rules
  */
 
-/* kanonas gia func Decl kai meta kanonas gia func calls , opote otan einai gia func calls sthn arxh ftiaxnw thn main */
-
-/* take all inputs such as : first function declarations and after function calls or vice versa */
-
-/* xreaizetai kai ena Goal ::= Start; gia na ftiaxoyme thn Main class */
 
 Goal	::=	FunctionD:s1 FunctionC:s2					{:System.out.println("public class Main {\n\tpublic static void main(String[] args) {\n\t" + s2 + "\n\t}\n\n" + s1 + "\n}");:}
-		;
-
-Start ::=	FunctionDecl:s1 FunctionCall:s2				{:System.out.println("PER 1");  RESULT = "\n\tpublic static void main(String[] args){\n\t\t" + s2 + "}\n\n\t" + s1; :}
 		;		
 
 FunctionD 		::=	FunctionD:s1 FunctionDecl:s2  								{: RESULT = s1 + "\n" + s2; :}
@@ -71,7 +63,7 @@ FunctionD 		::=	FunctionD:s1 FunctionDecl:s2  								{: RESULT = s1 + "\n" + s2
 				;
 
 FunctionC 		::=	FunctionC:s1 FunctionCall:s2  								{: RESULT = "\t" + s1 + "\n" + "\t\tSystem.out.println(" + s2 + ");"; :}
-				|	FunctionCall:s 												{: RESULT = "System.out.println(" + s + ")" + ";"; :}
+				|	FunctionCall:s 												{: RESULT = "\tSystem.out.println(" + s + ")" + ";"; :}
 				;
 
 FunctionDecl	::= ID:s1 LPAREN RPAREN CompoundStmt1:s2 						{: RESULT = "\tpublic static String " + s1 + "() " + s2; :}
@@ -94,7 +86,7 @@ EXPR 			::=	QSTR:s1 COMMA EXPR:s2 										{: RESULT = "\"" + s1 + "\"," + s2; 
 				|	QSTR:s 														{: RESULT = "\"" + s + "\""; :}
 				;
 
-CompoundStmt1 	::= LBRAC StmtList1:s RBRAC 				{: RESULT = "{\n\t\treturn " + s + ";\n\t}\n"; :}
+CompoundStmt1 	::= LBRAC StmtList1:s RBRAC 				{: System.out.println(s); RESULT = "{\n\t\treturn " + s + ";\n\t}\n"; :}
 				;
 
 CompoundStmt2 	::= LBRAC StmtList2:s RBRAC					{: RESULT = "{\n\t\treturn " + s + ";\n\t}\n"; :}
@@ -102,21 +94,21 @@ CompoundStmt2 	::= LBRAC StmtList2:s RBRAC					{: RESULT = "{\n\t\treturn " + s 
 
 
 StmtList1		::=	StmtList1:s1 PLUS QSTR:s2 				{: RESULT = s1 + "+ \"" + s2 + "\""; :}
-				|	IFEXPR:s1 PLUS QSTR:s2 					{: RESULT = s1 + "+ \"" + s2 + "\""; :}
+				|	StmtList1:s1 PLUS IFEXPR:s2 			{: System.out.println(s1); RESULT = s1 + "+ (" + s2 + ")"; :}
 				|	IFEXPR:s 								{: RESULT = s; :}
 				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
 				;
 
 StmtList2 		::=	StmtList2:s1 PLUS ID:s2 				{: RESULT = s1 + "+" + s2; :}
 				|	StmtList2:s1 PLUS QSTR:s2 				{: RESULT = s1 + "+ \"" + s2 + "\""; :}
-				|	StmtList2:s1 PLUS IFEXPR:s2 			{: RESULT = s1 + "+" + s2; :}
+				|	StmtList2:s1 PLUS IFEXPR:s2 			{: RESULT = s1 + " + (" + s2 + ")"; :}
 				|	IFEXPR:s 								{: RESULT = s; :}
 				|	ID:s 									{: RESULT = s; :}
 				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
 				;
 
 Stmt 			::=	ID:s1 PLUS Stmt:s2 						{: RESULT = s1 + "+" + s2; :}
-				| 	QSTR:s1 PLUS Stmt:s2 					{: RESULT = "\"" + s1 + "+" + s2; :}
+				| 	QSTR:s1 PLUS Stmt:s2 					{: RESULT = "\"" + s1 + "\" + (" + s2 + ")"; :}
 				|	IFEXPR:s 								{: RESULT = s; :}
 				|	FunctionCall:s 							{: RESULT = s; :}
 				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
