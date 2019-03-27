@@ -90,6 +90,8 @@ CompoundStmt2 	::= LBRAC StmtList2:s RBRAC					{: RESULT = "{\n\t\treturn " + s 
 
 StmtList1		::=	StmtList1:s1 PLUS QSTR:s2 				{: RESULT = s1 + "+ \"" + s2 + "\""; :}
 				|	StmtList1:s1 PLUS IFEXPR:s2 			{: RESULT = s1 + "+ (" + s2 + ")"; :}
+				|	StmtList1:s1 PLUS FunctionCall1:s2 		{: RESULT = s1 + "+" + s2; :}
+				|	FunctionCall1:s 						{: RESULT = s; :}
 				|	IFEXPR:s 								{: RESULT = s; :}
 				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
 				;
@@ -97,6 +99,8 @@ StmtList1		::=	StmtList1:s1 PLUS QSTR:s2 				{: RESULT = s1 + "+ \"" + s2 + "\""
 StmtList2 		::=	StmtList2:s1 PLUS ID:s2 				{: RESULT = s1 + "+" + s2; :}
 				|	StmtList2:s1 PLUS QSTR:s2 				{: RESULT = s1 + "+ \"" + s2 + "\""; :}
 				|	StmtList2:s1 PLUS IFEXPR1:s2 			{: RESULT = s1 + " + (" + s2 + ")"; :}
+				|	StmtList2:s1 PLUS FunctionCall1:s2 		{: RESULT = s1 + "+" + s2; :}
+				|	FunctionCall1:s 						{: RESULT = s; :}
 				|	IFEXPR1:s 								{: RESULT = s; :}
 				|	ID:s 									{: RESULT = s; :}
 				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
