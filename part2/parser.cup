@@ -9,11 +9,6 @@ import java_cup.runtime.*;
  *  Usercode Components
  */
 
-action code {:
-	int FnCflag=0;
-	int Callflag = 1;
-:}
-
 parser code {:
     // Connect this parser to a scanner!
     Scanner s;
@@ -33,29 +28,25 @@ terminal String     STRING_LITERAL, QSTR;        // our scanner provides numbers
 
 
 /*  Non terminals */
-/*
-non terminal            Goal, Start, Function, FunctionC, FunctionD , CompoundStmtD, EXPR, FunctionDecl, FunctionCall ;
-non terminal String    ArgListOpt, CallListOpt, CompoundStmt,FunctionC2, Declaration, DeclarationD, DeclarationC, Concatenation, ConcatenationD, StringContent, IFEXPR, IFEXPR2;   */   // used to store evaluated subexpressions
 
-non terminal            Goal, FunctionD, FunctionC, FunctionDecl, CompoundStmt1, CompoundStmt2, ArgList, StmtList1, StmtList2, EXPR ;
-non terminal String    	ID, Arg, Stmt, FunctionCall, IFEXPR; 
+non terminal            Goal, FunctionD, FunctionC, FunctionDecl, CompoundStmt1, CompoundStmt2, Concatenation, ArgList, StmtList1, StmtList2, EXPR, EXPR1 ;
+non terminal String    	ID, Arg, Stmt, Stmt1, FunctionCall, FunctionCall1, IFEXPR, IFEXPR1; 
 
 
 /**
  *  Precedence Declarations
  */
 
-precedence left PREFIX, SUFFIX, LBRAC;
+/*precedence left PREFIX, SUFFIX, LBRAC; */
 precedence left PLUS, MINUS;
-precedence left TIMES;
-precedence left IF, ELSE;
+/* precedence left IF, ELSE; */
 
 /**
  *  The Grammar Rules
  */
 
 
-Goal	::=	FunctionD:s1 FunctionC:s2					{:System.out.println("public class Main {\n\tpublic static void main(String[] args) {\n\t" + s2 + "\n\t}\n\n" + s1 + "\n}");:}
+Goal	::=	FunctionD:s1 FunctionC:s2					{: System.out.println("public class Main {\n\tpublic static void main(String[] args) {\n\t" + s2 + "\n\t}\n\n" + s1 + "\n}");:}
 		;		
 
 FunctionD 		::=	FunctionD:s1 FunctionDecl:s2  								{: RESULT = s1 + "\n" + s2; :}
@@ -63,7 +54,7 @@ FunctionD 		::=	FunctionD:s1 FunctionDecl:s2  								{: RESULT = s1 + "\n" + s2
 				;
 
 FunctionC 		::=	FunctionC:s1 FunctionCall:s2  								{: RESULT = "\t" + s1 + "\n" + "\t\tSystem.out.println(" + s2 + ");"; :}
-				|	FunctionCall:s 												{: RESULT = "\tSystem.out.println(" + s + ")" + ";"; :}
+				|	FunctionCall:s 												{: RESULT = "System.out.println(" + s + ")" + ";"; :}
 				;
 
 FunctionDecl	::= ID:s1 LPAREN RPAREN CompoundStmt1:s2 						{: RESULT = "\tpublic static String " + s1 + "() " + s2; :}
@@ -81,12 +72,16 @@ ArgList 		::=	ID:s1 COMMA ArgList:s2 										{: RESULT = "String " + s1 + "," 
 EXPR 			::=	QSTR:s1 COMMA EXPR:s2 										{: RESULT = "\"" + s1 + "\"," + s2; :}
 				|	IFEXPR:s1 COMMA EXPR:s2 									{: RESULT = s1 + "," + s2; :}
 				|	FunctionCall:s1 COMMA EXPR:s2 								{: RESULT = s1 + "," + s2; :}
+				|	Concatenation:s 											{: RESULT = s; :}
 				|	FunctionCall:s 												{: RESULT = s; :}
 				|	IFEXPR:s 													{: RESULT = s; :}
-				|	QSTR:s 														{: RESULT = "\"" + s + "\""; :}
 				;
 
-CompoundStmt1 	::= LBRAC StmtList1:s RBRAC 				{: System.out.println(s); RESULT = "{\n\t\treturn " + s + ";\n\t}\n"; :}
+Concatenation 	::=	Concatenation:s1 PLUS QSTR:s2 			{: RESULT = s1 + " + \"" + s2 + "\""; :}	
+				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
+				;
+
+CompoundStmt1 	::= LBRAC StmtList1:s RBRAC 				{: RESULT = "{\n\t\treturn " + s + ";\n\t}\n"; :}
 				;
 
 CompoundStmt2 	::= LBRAC StmtList2:s RBRAC					{: RESULT = "{\n\t\treturn " + s + ";\n\t}\n"; :}
@@ -94,21 +89,21 @@ CompoundStmt2 	::= LBRAC StmtList2:s RBRAC					{: RESULT = "{\n\t\treturn " + s 
 
 
 StmtList1		::=	StmtList1:s1 PLUS QSTR:s2 				{: RESULT = s1 + "+ \"" + s2 + "\""; :}
-				|	StmtList1:s1 PLUS IFEXPR:s2 			{: System.out.println(s1); RESULT = s1 + "+ (" + s2 + ")"; :}
+				|	StmtList1:s1 PLUS IFEXPR:s2 			{: RESULT = s1 + "+ (" + s2 + ")"; :}
 				|	IFEXPR:s 								{: RESULT = s; :}
 				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
 				;
 
 StmtList2 		::=	StmtList2:s1 PLUS ID:s2 				{: RESULT = s1 + "+" + s2; :}
 				|	StmtList2:s1 PLUS QSTR:s2 				{: RESULT = s1 + "+ \"" + s2 + "\""; :}
-				|	StmtList2:s1 PLUS IFEXPR:s2 			{: RESULT = s1 + " + (" + s2 + ")"; :}
-				|	IFEXPR:s 								{: RESULT = s; :}
+				|	StmtList2:s1 PLUS IFEXPR1:s2 			{: RESULT = s1 + " + (" + s2 + ")"; :}
+				|	IFEXPR1:s 								{: RESULT = s; :}
 				|	ID:s 									{: RESULT = s; :}
 				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
 				;
 
-Stmt 			::=	ID:s1 PLUS Stmt:s2 						{: RESULT = s1 + "+" + s2; :}
-				| 	QSTR:s1 PLUS Stmt:s2 					{: RESULT = "\"" + s1 + "\" + (" + s2 + ")"; :}
+Stmt 			::=	ID:s1 PLUS Stmt:s2 						{: RESULT = s1 + " + " + s2; :}
+				| 	QSTR:s1 PLUS Stmt:s2 					{: RESULT = "\"" + s1 + "\" + (" + s2 + ")" ; :}
 				|	IFEXPR:s 								{: RESULT = s; :}
 				|	FunctionCall:s 							{: RESULT = s; :}
 				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
@@ -118,6 +113,34 @@ Stmt 			::=	ID:s1 PLUS Stmt:s2 						{: RESULT = s1 + "+" + s2; :}
 IFEXPR 			::=	IF LPAREN Stmt:s1 PREFIX Stmt:s2 RPAREN Stmt:s3 ELSE Stmt:s4 			{: RESULT = s2 + ".startsWith(" + s1 + ")?" + s3 + ":" + s4; :}
 				|	IF LPAREN Stmt:s1 SUFFIX Stmt:s2 RPAREN Stmt:s3 ELSE Stmt:s4 			{: RESULT = s2 + ".endsWith(" + s1 + ")?" + s3 + ":" + s4; :}
 				; 
+
+/* these rules are used for if expressions inside function declaration */
+
+IFEXPR1 		::=	IF LPAREN Stmt1:s1 PREFIX Stmt1:s2 RPAREN Stmt1:s3 ELSE Stmt1:s4 			{: RESULT = s2 + ".startsWith(" + s1 + ")?" + s3 + ":" + s4; :}
+				|	IF LPAREN Stmt1:s1 SUFFIX Stmt1:s2 RPAREN Stmt1:s3 ELSE Stmt1:s4 			{: RESULT = s2 + ".endsWith(" + s1 + ")?" + s3 + ":" + s4; :}
+				; 
+
+Stmt1			::=	ID:s1 PLUS Stmt1:s2 					{: RESULT = s1 + " + " + s2; :}
+				| 	QSTR:s1 PLUS Stmt1:s2 					{: RESULT = "\"" + s1 + "\" + (" + s2 + ")" ; :}
+				|	IFEXPR1:s 								{: RESULT = s; :}
+				|	FunctionCall1:s 						{: RESULT = s; :}
+				|	QSTR:s 									{: RESULT = "\"" + s + "\""; :}
+				|	ID:s 									{: RESULT = s; :}
+				;
+
+FunctionCall1	::=	ID:s LPAREN RPAREN 											{: RESULT = s + "()" ; :}
+				|	ID:s1 LPAREN EXPR1:s2 RPAREN 								{: RESULT = s1 + "(" + s2 + ")" ; :}
+				;
+
+EXPR1 			::=	QSTR:s1 COMMA EXPR1:s2 										{: RESULT = "\"" + s1 + "\"," + s2; :}
+				|	IFEXPR1:s1 COMMA EXPR1:s2 									{: RESULT = s1 + "," + s2; :}
+				|	FunctionCall1:s1 COMMA EXPR1:s2 							{: RESULT = s1 + "," + s2; :}
+				|	ID:s1 COMMA EXPR1:s2 										{: RESULT = s1 + "," + s2; :}
+				|	Concatenation:s 											{: RESULT = s; :}
+				|	FunctionCall1:s 											{: RESULT = s; :}
+				|	IFEXPR1:s 													{: RESULT = s; :}
+				| 	ID:s 														{: RESULT = s; :}
+				;
 
 ID 				::=	STRING_LITERAL:s 				{: RESULT = s; :}
 				;

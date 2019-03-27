@@ -91,7 +91,7 @@ dec_int_lit = 0 | [1-9][0-9]*
 
 
 <STRING> {
-      \"                             {  yybegin(YYINITIAL); System.out.println("LEXER "+stringBuffer);
+      \"                             {  yybegin(YYINITIAL);
                                         return symbol(sym.QSTR, stringBuffer.toString()); }
       [^\n\r\"\\]+                   { stringBuffer.append( yytext() ); }
       \\t                            { stringBuffer.append('\t'); }
