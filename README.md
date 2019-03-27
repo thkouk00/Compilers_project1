@@ -1,4 +1,4 @@
-# Compilers1
+# Compilers_project1
 Implementation of a LL(1) parser for a simple calculator and a translator to Java for a language for string operations.
 
 Part 1
